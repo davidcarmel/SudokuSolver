@@ -1,2 +1,13 @@
 #bash
-java -cp sudokuSolver.jar com.io.sudoku.SudokuSolver $1 $2 $3 $4
+# parameters: 
+	$1 - file name 
+#	$1 - BlockSize  (3,4, etc.)
+#	$2 strategies "ruhn"
+#		"" no strategies - only backtracking (run might take a long time)
+#		r - Candidate Reduction
+#		u - Uniqueness
+#		h - Hidden Pairs
+#		n - NamkedPairs
+# Usage: ./sudoku.bat ./data/95puzzles/p1.txt 3 "runh"
+#
+java -cp sudokuSolver.jar com.io.sudoku.SudokuSolver -f $1 -b $2 -s $3
