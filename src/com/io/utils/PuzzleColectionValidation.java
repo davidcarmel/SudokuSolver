@@ -1,4 +1,4 @@
-package com.io.soduko;
+package com.io.utils;
 
 import java.io.File;
 import java.io.IOException;
@@ -8,6 +8,8 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 
+import com.io.sudoku.Sudoku;
+
 public class PuzzleColectionValidation {
 	
 	/**
@@ -15,16 +17,16 @@ public class PuzzleColectionValidation {
 	 * @throws IOException 
 	 * @throws NumberFormatException 
 	 */
-	static void validateAllPuzzlesUniqueness(File f) throws NumberFormatException, IOException {
+	static void validateAllPuzzlesUniqueness(int BlockSize, File f) throws NumberFormatException, IOException {
 		boolean uniqueness = true;
 		String[] ext = {"txt"};
 		List<File> files = (List<File>) FileUtils.listFiles(f,ext,true);
-		List<Soduko> puzzles = new ArrayList<>();
+		List<Sudoku> puzzles = new ArrayList<>();
 		for (File file : files) {
-			Soduko s = new Soduko(file);
-			for (Soduko p : puzzles) {
+			Sudoku s = new Sudoku(BlockSize, file);
+			for (Sudoku p : puzzles) {
 				if (s.isEqual(p)) {
-					System.out.println(file.getName() + " already exist!");
+					System.out.println(file.getName() + " already exist! "+ p.getFileName());
 					uniqueness = false;
 				}
 			}
@@ -38,7 +40,7 @@ public class PuzzleColectionValidation {
 
 		File f = new File("./data");
 		try {
-			validateAllPuzzlesUniqueness(f);
+			validateAllPuzzlesUniqueness(3, f);
 		} catch (NumberFormatException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
