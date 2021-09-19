@@ -1,6 +1,6 @@
-#bash
+# bash!
 # parameters: 
-	$1 - file name 
+#	$1 - file name 
 #	$2 - BlockSize  (3,4, etc.)
 #
 #	$3 strategies "ruhn"

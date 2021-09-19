@@ -376,9 +376,9 @@ public class SudokuSolver {
 		String s = cmd.getOptionValue("strategies");
 		if (s != null)
 			p.setProperty("strategies", s);
-		String b = cmd.getOptionValue("block");
+		String b = cmd.getOptionValue("block size");
 		if (b != null)
-			p.setProperty("block", b);
+			p.setProperty("block size", b);
 		String f = cmd.getOptionValue("file");
 		if (f != null)
 			p.setProperty("file", f);
@@ -398,7 +398,7 @@ public class SudokuSolver {
 			Properties prop = getArgs(args);
 			String strategies = (String) prop.getProperty("strategies");
 
-			String argBlockSize = (String) prop.getProperty("block");
+			String argBlockSize = (String) prop.getProperty("block size");
 			int B = argBlockSize != null ? Integer.parseInt(argBlockSize) : 3;
 
 			String fileName = (String) prop.getProperty("file");
