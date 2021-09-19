@@ -14,7 +14,7 @@ import org.apache.commons.math3.util.Pair;
 /**
  * A Sudoku class maintains all operations on the Sudoku puzzle
  * 
- * @author dcarmel@gmail.com
+ * @author david.carmel@gmail.com
  *
  */
 
@@ -56,9 +56,9 @@ public class Sudoku {
 	/**
 	 * Construct an empty Sudoku puzzle of size BlockSize^2 x BlockSize^2
 	 * 
-	 * @param BlockSize - the size of the basic table block. 
+	 * @param BlockSize - the size of the basic table block.
 	 */
-	public Sudoku(int BlockSize) {
+	private Sudoku(int BlockSize) {
 		B = BlockSize;
 		N = B * B;
 		puzzle = new int[N + 1][N + 1];
@@ -67,7 +67,7 @@ public class Sudoku {
 	}
 
 	/**
-	 * Construct a Sudoku puzzle by reading from a file
+	 * Construct a Sudoku puzzle by reading it from a file
 	 * 
 	 * @param BlockSize
 	 * @param File      f
@@ -151,18 +151,21 @@ public class Sudoku {
 		BufferedReader br = new BufferedReader(new FileReader(f));
 		String line = null;
 		int row = 1;
-		while ((line = br.readLine()) != null) {
-			if (line.isBlank() || row > N)
-				continue;
-			String[] vals = line.split(" ");
-			if (vals.length != N)
-				return null;
-			for (int j = 0; j < vals.length; j++) {
-				out[row][j + 1] = Integer.parseInt(vals[j]);
+		try {
+			while ((line = br.readLine()) != null) {
+				if (line.isBlank() || row > N)
+					continue;
+				String[] vals = line.split(" ");
+				if (vals.length != N)
+					return null;
+				for (int j = 0; j < vals.length; j++) {
+					out[row][j + 1] = Integer.parseInt(vals[j]);
+				}
+				row++;
 			}
-			row++;
+		} finally {
+			br.close();
 		}
-		br.close();
 		return out;
 	}
 
@@ -278,7 +281,7 @@ public class Sudoku {
 		this.constraints[i][j].clear(val);
 	}
 
-	/** 
+	/**
 	 * 
 	 * @param i
 	 * @param j
@@ -305,7 +308,8 @@ public class Sudoku {
 
 	/**
 	 * 
-	 * @return the list of non-assigned cells. We clone the list from concurrency considerations
+	 * @return the list of non-assigned cells. We clone the list from concurrency
+	 *         considerations
 	 */
 	public List<Pair<Integer, Integer>> getNonAssignedCells() {
 		return new ArrayList<Pair<Integer, Integer>>(nonAssignedCells);

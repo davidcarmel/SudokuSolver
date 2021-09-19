@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -22,13 +23,13 @@ import org.apache.commons.math3.util.Pair;
 import com.io.sudoku.Sudoku.UnitType;
 
 /**
- * This class solve a Sudoku puzzle by search over the domain space and by
+ * This class solve a Sudoku puzzle by searching over the domain space and by
  * enforcing constraints on the cell legal values
  * 
- * Some known techniques for Sudoku solving:
+ * See known techniques for Sudoku solving:
  * https://www.kristanix.com/sudokuepic/sudoku-solving-techniques.php
  * 
- * Some free online Sudoku puzzles to experiment with:
+ * Free online Sudoku puzzles to experiment with:
  * http://lipas.uwasa.fi/~timan/sudoku/
  * 
  * @author david.carmel@gmail.com
@@ -57,6 +58,7 @@ public class SudokuSolver {
 			if (nonAssignedCells.size() == 0)
 				// no cells to assign - puzzle solved
 				return true;
+
 			for (Pair<Integer, Integer> cell : nonAssignedCells) {
 				int i = cell.getKey();
 				int j = cell.getValue();
@@ -72,7 +74,7 @@ public class SudokuSolver {
 					// if no candidates left for this cell, there is no solution for the puzzle
 					return false;
 				} else if (sudoku.getCellCandidates(i, j).size() == 1) {
-					// sole candidate  - nail it in this cell
+					// sole candidate - nail it to this cell
 					sudoku.setCellValue(i, j, sudoku.getCellCandidates(i, j).get(0));
 					nonStable = true; // any setting requires a new pass
 				}
@@ -100,6 +102,7 @@ public class SudokuSolver {
 			}
 			if (nonAssignedCells.size() == 0)
 				return true; // no cells to assign - puzzle solved
+
 			for (Pair<Integer, Integer> cell : nonAssignedCells) {
 				int i = cell.getKey();
 				int j = cell.getValue();
@@ -114,7 +117,7 @@ public class SudokuSolver {
 							if (sudoku.contains(up.getKey(), up.getValue(), val))
 								contained = true;
 						}
-						if (!contained) { // val does not appear more in the unit, assign it.
+						if (!contained) { // val does not appear in other unit cells, nail it to (i,j).
 							sudoku.setCellValue(i, j, val);
 							nonStable = true;
 							break;
@@ -124,7 +127,7 @@ public class SudokuSolver {
 			}
 			// complete the scan by validating the new assignments with
 			// candidate reduction
-			if (nonStable) {// at least one entry was assigned - lets continue with candidate reduction
+			if (nonStable) {// at least one entry was assigned - apply candidate reduction
 				boolean assignment = candidateReduction(sudoku);
 				if (!assignment)
 					return false; // no solution!
@@ -267,7 +270,7 @@ public class SudokuSolver {
 	static int searchCounter = 0; // count the number of call to the solve method
 
 	/**
-	 * Recursive Search for valid allocation
+	 * DFS Search for valid allocation
 	 * 
 	 * @param puzzle
 	 * @param constraints
@@ -334,9 +337,6 @@ public class SudokuSolver {
 						return solved;
 					}
 				}
-				else {
-					sudoku.removeCellCandidate(tr.getLeft(), tr.getMiddle(), val);
-				}					
 			} // next val
 			return null; // no value can be assigned to (i,j)- the pass reaches dead-end - return null
 							// the the upper level
@@ -344,13 +344,12 @@ public class SudokuSolver {
 		return null;
 	}
 
-	public static void main(String[] args) {
-
+	static Properties getArgs(String[] args) {
 		Options options = new Options();
-		Option opStrategies = new Option("s", "strategies", true, "Strategies [r - cand reduction, u - uniquenss in unit, h - hidden pairs, n - naked pairs]");
-		opStrategies.setOptionalArg(true);		
+		Option opStrategies = new Option("s", "strategies", true,
+				"Strategies [r - cand reduction, u - uniquenss in unit, h - hidden pairs, n - naked pairs]");
+		opStrategies.setOptionalArg(true);
 		options.addOption(opStrategies);
-		
 
 		Option blockSize = new Option("b", "block size", true, "Block Size");
 		blockSize.setOptionalArg(true);
@@ -363,26 +362,58 @@ public class SudokuSolver {
 		CommandLineParser parser = new DefaultParser();
 		HelpFormatter formatter = new HelpFormatter();
 		CommandLine cmd;
-		
+
 		try {
 			cmd = parser.parse(options, args);
 		} catch (ParseException e) {
 			System.out.println(e.getMessage());
 			formatter.printHelp("Commands:", options);
 			System.exit(1);
-			return;
+			return null;
 		}
 
+		Properties p = new Properties();
+		String s = cmd.getOptionValue("strategies");
+		if (s != null)
+			p.setProperty("strategies", s);
+		String b = cmd.getOptionValue("block");
+		if (b != null)
+			p.setProperty("block", b);
+		String f = cmd.getOptionValue("file");
+		if (f != null)
+			p.setProperty("file", f);
+
+		return p;
+	}
+
+	private static void printHelp() {
+		System.out.println("Usage: SudokuSolver -f <file-name> -b <block-size> -s [ruhn]");
+		System.out
+				.println("Strategies:\nr - candidate reduction\n u- uninquness\n h - hidden pairs\n n - naked pairs\n");
+	}
+
+	public static void main(String[] args) {
+
 		try {
-			String strategies = cmd.getOptionValue("strategies");
-			String argBlockSize = cmd.getOptionValue("block");
-			int B = (argBlockSize != null) ? Integer.parseInt(argBlockSize) :3;
-			String fileName = cmd.getOptionValue("file");
+			Properties prop = getArgs(args);
+			String strategies = (String) prop.getProperty("strategies");
+
+			String argBlockSize = (String) prop.getProperty("block");
+			int B = argBlockSize != null ? Integer.parseInt(argBlockSize) : 3;
+
+			String fileName = (String) prop.getProperty("file");
 			if (fileName == null) {
-				formatter.printHelp("Commands:", options);
+				System.out.println("No file name!");
+				printHelp();
 				System.exit(1);
 			}
 			File f = new File(fileName);
+			if (!f.isDirectory() && !f.isFile()) {
+				System.out.println("Wrong file name!");
+				printHelp();
+				System.exit(1);
+			}
+
 			System.out.printf("Args:%n Strategies = %s%n Block = %d%n file = %s%n%n", strategies, B, f.getPath());
 
 			String[] ext = { "txt" };
@@ -423,13 +454,16 @@ public class SudokuSolver {
 			for (int i = 0; i < puzzleCount; i++)
 				System.out.printf("\t%10d", counters[i]);
 			System.out.println();
-			System.out.printf("#Solved puzzles = %d, Avg. Running time = %5.3f seconds, Avg #calls = %5.3f, Max #calls %d%n",
-					puzzleSolved, ((float) time / (1000))/ puzzleSolved, ((float) callsSum) / puzzleSolved, maxNumCalls);
+			System.out.printf(
+					"#Solved puzzles = %d, Avg. Running time = %5.3f seconds, Avg #calls = %5.3f, Max #calls %d%n",
+					puzzleSolved, ((float) time / (1000)) / puzzleSolved, ((float) callsSum) / puzzleSolved,
+					maxNumCalls);
 		} catch (NumberFormatException | IOException e) {
 			e.printStackTrace();
 		}
 
 	}
+
 }
 
 /**
